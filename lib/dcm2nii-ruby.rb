@@ -4,6 +4,7 @@ class Dcm2nii
 
 	def initialize
 		@options = {}
+		@dcm2nii_path = '/Applications/mricro/dcm2nii'
 	end
 
 	def argument_list
@@ -11,13 +12,21 @@ class Dcm2nii
   	end
 
 	def command_line
-		raise ArgumentError, "No input file specified." unless @input_dir
-		['dcm2nii', argument_list, @input_dir].select{|x| !(x.nil? || x.empty?)}.join(' ')
+		raise ArgumentError, "No input directory specified." unless @input_dir
+		[@dcm2nii_path, argument_list, @input_dir].select{|x| !(x.nil? || x.empty?)}.join(' ')
 	end
 
 	def convert!
 		puts command_line
-		# system command_line
+		pid, stdin, stdout, stderr = Open4::popen4 command_line
+		puts "PID: #{pid}"
+		puts "STDIN: #{stdin}"
+		puts "STDOUT: #{stdout}"
+		puts "STDERR: #{stderr}"
+	end
+
+	def dcm2nii_path(path)
+		@dcm2nii_path = path
 	end
 
 	def input_dir(path)
