@@ -1,4 +1,5 @@
 require "dcm2nii-ruby/version"
+require 'open4'
 class Dcm2nii
 	attr_accessor :options
 
@@ -21,7 +22,7 @@ class Dcm2nii
 		pid, stdin, stdout, stderr = Open4::popen4 command_line
 		puts "PID: #{pid}"
 		puts "STDIN: #{stdin}"
-		puts "STDOUT: #{stdout}"
+		puts "STDOUT: #{stdout.read}"
 		puts "STDERR: #{stderr}"
 	end
 
@@ -94,3 +95,5 @@ class Dcm2nii
 		@options[:reorient_crop] = "-x Y"
 	end
 end
+# REGEX para parsear el stdout y hacer match de los archivos nii.gz:
+#     /(?<=Gzip...)(.*?)gz/im
