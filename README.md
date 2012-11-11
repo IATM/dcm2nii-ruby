@@ -1,6 +1,6 @@
 # Dcm2nii::Ruby
 
-TODO: Write a gem description
+A Ruby wrapper for the dcm2nii DICOM to NIFTI file conversion utility
 
 ## Installation
 
@@ -18,7 +18,15 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+dn = Dcm2nii::Runner.new(input_directory,{options hash})
+
+eg:
+
+dn = Dcm2nii::Runner.new('/Users/simonmd/code/rubycamppus/input/samples/dicom',{reorient_crop:false, reorient:false}) # creates an instance of the DCM2NII runner
+
+dn.command # runs the utility
+
+resulting_file = dn.get_nii # Returns the generated nifti file
 
 ## Contributing
 
