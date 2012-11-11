@@ -1,99 +1,76 @@
 require "dcm2nii-ruby/version"
-require 'open4'
-class Dcm2nii
-	attr_accessor :options
 
-	def initialize
-		@options = {}
-		@dcm2nii_path = '/Applications/mricro/dcm2nii'
-	end
+module Dcm2nii
 
-	def argument_list
-		@options.collect {|k,v| v}.join(' ')
-  	end
+	class Runner
+		@@command_path = '/Applications/mricro/dcm2nii'
+		@@options_map = { anonymize: '-a',
+							settings_file: '-b',
+							collapse_folders: '-c',
+							date_in_filename: '-d',
+							events_in_filename: '-e',
+							source_filename: '-f',
+							gzip: '-g',
+							id_in_filename: '-i',
+							nifti: '-n',
+							output_dir: '-o',
+							protocol_in_filename: 'p',
+							reorient: '-r',
+							spm2_analyze: '-s',
+							convert_images: '-v',
+							reorient_crop: '-x'
+						}
 
-	def command_line
-		raise ArgumentError, "No input directory specified." unless @input_dir
-		[@dcm2nii_path, argument_list, @input_dir].select{|x| !(x.nil? || x.empty?)}.join(' ')
-	end
+		def self.command_path=(path)
+			@@command_path = path
+		end
 
-	def convert!
-		puts command_line
-		pid, stdin, stdout, stderr = Open4::popen4 command_line
-		puts "PID: #{pid}"
-		puts "STDIN: #{stdin}"
-		puts "STDOUT: #{stdout.read}"
-		puts "STDERR: #{stderr}"
-	end
+		def self.command_path
+			@@command_path
+		end
 
-	def dcm2nii_path(path)
-		@dcm2nii_path = path
-	end
+		def self.options_map
+			@@options_map
+		end
 
-	def input_dir(path)
-		@input_dir = path
-	end
+		def initialize(input_dir, opt = {})
+			@input_dir = input_dir
+			@opt = opt
+		end
 
-	# Option Methods
-	def anonymize!
-		@options[:anonymize] = "-a Y"
-	end
+		def map_vals(val)
+			if val == true || val == false
+				val ? 'Y' : 'N'
+			else
+				val
+			end
+		end
 
-	def settings_file(filepath)
-		@options[:settings_file] = "-b #{filepath}"
-	end
+		def map_options(opt ={})
+			opt.inject({}) { |h, (k, v)| h[k] = (self.class.options_map[k] + ' ' + map_vals(v)); h }
+		end
 
-	def collapse_folders!
-		@options[:collapse_folders] = "-c Y"
-	end
+		def argument_list
+			map_options(@opt).collect {|k,v| v}.join(' ')
+		end
 
-	def date_in_filename!
-		@options[:date_in_filename] = "-d Y"
-	end
+		def command
+			puts "******Running dcm2nii with arguments: #{argument_list} on directory: #{@input_dir}*******"
+			output = `#{self.class.command_path} #{argument_list} #{@input_dir}`
+			exit_code = $?
+			case exit_code
+				when 0
+					return output
+				else
+			        #   exit_error = Dcm2nii::Runner::UnexpectedExitError.new
+			        #   exit_error.exit_code = exit_code
+			        #   raise exit_error
+			        # end
+			end
+		end
 
-	def events_in_filename!
-		@options[:events_in_filename] = "-e Y"
-	end
-
-	def source_filename!
-		@options[:source_filename] = "-f Y"
-	end
-
-	def gzip!
-		@options[:gzip] = "-g Y"
-	end
-
-	def id_in_filename!
-		@options[:id_in_filename] = "-i Y"
-	end
-
-	def nifti!
-		@options[:nifti] = "-n Y"
-	end
-
-	def output_dir(path)
-		@options[:output_dir] = "-o #{path}"
-	end
-
-	def protocol_in_filename!
-		@options[:protocol_in_filename] = "-p Y"
-	end
-
-	def reorient!
-		@options[:reorient] = "-r Y"
-	end
-
-	def spm2_analyze!
-		@options[:spm2_analyze] = "-s Y"
-	end
-
-	def convert_images!
-		@options[:convert_images] = "-v Y"
-	end
-
-	def reorient_crop!
-		@options[:reorient_crop] = "-x Y"
+		def get_nii
+			return `find #{@input_dir} -name *.nii*`.chomp
+		end
 	end
 end
-# REGEX para parsear el stdout y hacer match de los archivos nii.gz:
-#     /(?<=Gzip...)(.*?)gz/im
