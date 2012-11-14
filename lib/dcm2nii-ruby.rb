@@ -55,13 +55,16 @@ module Dcm2nii
 		end
 
 		def command
-			puts "******Running dcm2nii with arguments: #{argument_list} on directory: #{@input_dir}*******"
-			output = `#{self.class.command_path} #{argument_list} #{@input_dir}`
+			command_str = "#{self.class.command_path} #{argument_list} #{@input_dir}"
+			puts "Running DCM2NII with command #{command_str}"
+			result = `#{command_str}`
 			exit_code = $?
 			case exit_code
 				when 0
-					return output
+					puts "Done running DCM2NII."
+					return result
 				else
+					puts "An error ocurred while running DCM2NII"
 			        #   exit_error = Dcm2nii::Runner::UnexpectedExitError.new
 			        #   exit_error.exit_code = exit_code
 			        #   raise exit_error
@@ -70,7 +73,12 @@ module Dcm2nii
 		end
 
 		def get_nii
-			return `find #{@input_dir} -name *.nii*`.chomp
+			if @opt[:output_dir]
+				lookup_dir = @opt[:output_dir]
+			else
+				lookup_dir = @input_dir
+			end
+			return `find #{lookup_dir} -name *.nii*`.chomp
 		end
 	end
 end
